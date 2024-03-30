@@ -16,16 +16,71 @@ pipeline {
             }
         }
 
-        // Wrap dir within a stage and steps
-        stage('Terraform Operations') {
+        stage('Run TFSec') {
             steps {
-                // Change directory to where the Terraform code is
                 dir('terraform/environments/stage') {
-                    // Terraform operations are now within the steps block of a stage
-                    sh 'tflint'
-                    sh 'tfsec .'
-                    sh 'checkov -d .'
+                    script {
+                        // Run tfsec and output results to a file
+                        sh 'tfsec . --format=json --soft-fail > tfsec-results.json'
 
+                        // Read the tfsec results file
+                        def tfsecResults = readJSON file: 'tfsec-results.json'
+
+                        // Check for critical results
+                        boolean hasCriticals = tfsecResults.results.any { result ->
+                            result.severity == "CRITICAL"
+                        }
+
+                        // Fail the pipeline if there are critical alerts
+                        if (hasCriticals) {
+                            error("Critical alerts found by tfsec.")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Run TFLint') {
+            steps {
+                dir('terraform/environments/stage') {
+                    script {
+                        // Run tflint and save results
+                        sh 'tflint --format=json > tflint-results.json'
+
+                        // Read and parse the JSON output
+                        def tflintResults = readJSON file: 'tflint-results.json'
+
+                        // Determine if there are any errors
+                        if (tflintResults.errors.size() > 0) {
+                            error("TFLint reported errors.")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Run Checkov') {
+            steps {
+                dir('terraform/environments/stage') {
+                    script {
+                        // Run checkov and save results
+                        sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
+
+                        // Read and parse the JSON output
+                        def checkovResults = readJSON file: 'checkov-results.json'
+
+                        // Check for failed checks
+                        if (checkovResults.failed_checks.size() > 0) {
+                            error("Checkov reported failed checks.")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Terraform init,plan,apply') {
+            steps {
+                dir('terraform/environments/stage') {
                     script {
                         withCredentials([[
                             $class: 'AmazonWebServicesCredentialsBinding',
@@ -36,7 +91,7 @@ pipeline {
                             sh 'terraform init'
                             sh 'terraform validate'
                             sh 'terraform plan -out=plan.out'
-                            input 'Do you want to apply the Terraform plan?'
+                            input message: 'Do you want to apply the Terraform plan?', ok: 'Yes'
                             sh 'terraform apply plan.out'
                         }
                     }
@@ -50,6 +105,7 @@ pipeline {
         }
     }
 }
+
 
 
 
