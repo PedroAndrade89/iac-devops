@@ -40,6 +40,8 @@ pipeline {
             steps {
                 dir('terraform/environments/stage') {
                     script {
+                        sh 'python --version'
+                        sh 'pip3 list'
                         // Run checkov and save results
                         sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
 
