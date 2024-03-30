@@ -36,6 +36,26 @@ pipeline {
             }
         }
 
+        stage('Run Checkov') {
+            steps {
+                dir('terraform/environments/stage') {
+                    script {
+                        // Run checkov and save results
+                        sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
+
+                        // Read and parse the JSON output
+                        def checkovResults = readJSON file: 'checkov-results.json'
+
+                        // Check for failed checks
+                        if (checkovResults.failed_checks.size() > 0) {
+                            error("Checkov reported failed checks.")
+                        }
+                    }
+                    archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
+                }
+            }
+        }
+
         stage('Run TFSec') {
             steps {
                 dir('terraform/environments/stage') {
@@ -57,27 +77,7 @@ pipeline {
                         }
                     }
                     // Archive the tfsec-results.json file immediately after it's created
-                    archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
-                }
-            }
-        }
-
-        stage('Run Checkov') {
-            steps {
-                dir('terraform/environments/stage') {
-                    script {
-                        // Run checkov and save results
-                        sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
-
-                        // Read and parse the JSON output
-                        def checkovResults = readJSON file: 'checkov-results.json'
-
-                        // Check for failed checks
-                        if (checkovResults.failed_checks.size() > 0) {
-                            error("Checkov reported failed checks.")
-                        }
-                    }
-                    archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
+                    archiveArtifacts artifacts: 'tfsec-results.json', onlyIfSuccessful: false
                 }
             }
         }
