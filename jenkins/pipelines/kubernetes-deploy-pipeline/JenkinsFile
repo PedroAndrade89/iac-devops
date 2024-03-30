@@ -4,8 +4,7 @@ pipeline {
     }
     environment {
         PATH = "/home/jenkins-slave/.local/bin/:${env.PATH}" // Add Ansible bin directory to PATH
-        // Define the name of your secret in AWS Secrets Manager
-        SECRET_NAME = "${env.cluster_name}-jenkins-sa-kubeconf"
+        SECRET_NAME = "${env.cluster_name}-jenkins-sa-kubeconf" // Define the name of your secret in AWS Secrets Manager
     }
     options {
         timeout(time: 30, unit: 'MINUTES') // Timeout for the entire pipeline
@@ -17,8 +16,7 @@ pipeline {
             }
         }
 
-        // Change directory to where the Terraform code is
-        dir('terraform/environments/stage') {
+        dir('terraform/environments/stage') { // Change directory to where the Terraform code is
             stage('Run TFLint') {
                 steps {
                     sh 'tflint'
@@ -30,13 +28,6 @@ pipeline {
                     sh 'tfsec .'
                 }
             }
-//
-//             stage('Run Terraform Compliance') {
-//                 steps {
-//                     // Adjust the path to the 'features' directory as needed
-//                     sh 'terraform-compliance -f ../../features -p plan.out'
-//                 }
-//             }
 
             stage('Run Checkov') {
                 steps {
@@ -44,33 +35,32 @@ pipeline {
                 }
             }
 
-            // Use the AWS credentials for Terraform operations
             stage('Terraform Operations') {
                 steps {
                     script {
-                        // Inject AWS credentials
                         withCredentials([[
                             $class: 'AmazonWebServicesCredentialsBinding',
                             credentialsId: 'jenkins-automate-user', // Use the ID you assigned in Jenkins Credentials Store
                             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                         ]]) {
-                            // Terraform Init
                             sh 'terraform init'
-
-                            // Terraform Validate
                             sh 'terraform validate'
-
-                            // Terraform Plan
                             sh 'terraform plan -out=plan.out'
-
-                            // Terraform Apply - Requires manual approval
                             input 'Do you want to apply the Terraform plan?'
                             sh 'terraform apply plan.out'
                         }
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            cleanWs() // Cleanup
+        }
+    }
+}
 
 
 //         stage('Retrieve Kubeconfig from AWS Secrets Manager') {
@@ -98,10 +88,10 @@ pipeline {
 //             }
 //         }
 //     }
-    post {
-        always {
-            // Cleanup
-            cleanWs()
-        }
-    }
-}
+//     post {
+//         always {
+//             // Cleanup
+//             cleanWs()
+//         }
+//     }
+// }
