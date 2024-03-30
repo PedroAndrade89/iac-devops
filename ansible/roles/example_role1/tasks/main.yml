@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Download Istio
+      get_url:
+        url: https://istio.io/downloadIstio
+        dest: "/tmp/istio.tar.gz"
+  
+    - name: Extract Istio
+      unarchive:
+        src: "/tmp/istio.tar.gz"
+        dest: "/opt"
+        remote_src: yes
+  
+    - name: Install Istio using istioctl
+      shell: |
+        export PATH=$PATH:/opt/istio-*/bin
+        istioctl install --set profile=demo -y
+

@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Download Istio
+    become_user: jenkins-slave
+    get_url:
+      url: https://github.com/istio/istio/releases/download/1.21.0/istio-1.21.0-linux-amd64.tar.gz
+      dest: "/home/jenkins-slave/istio-1.21.0-linux-amd64.tar.gz"
+
+  - name: Extract Istio
+    become_user: jenkins-slave
+    unarchive:
+      src: "/home/jenkins-slave/istio-1.21.0-linux-amd64.tar.gz"
+      dest: "/home/jenkins-slave/"
+      remote_src: yes
+
+  - name: Install Istio using istioctl
+    become_user: jenkins-slave
+    shell: |
+      export PATH=$PATH:/home/jenkins-slave/istio-1.21.0/bin
+      /home/jenkins-slave/istio-1.21.0/bin/istioctl install --set profile=demo -y
