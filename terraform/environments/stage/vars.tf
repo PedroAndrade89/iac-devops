@@ -69,11 +69,6 @@ variable "cluster_name" {
   type        = string
   description = "EKS cluster name"
 }
-variable "public_subnet_tags" {
-  type        = map(string)
-  default     = {}
-  description = "A map of tags to add to all public subnets."
-}
 
 variable "private_subnet_tags" {
   type        = map(string)
