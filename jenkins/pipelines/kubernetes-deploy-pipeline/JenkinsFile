@@ -104,6 +104,11 @@ pipeline {
             cleanWs() // Cleanup
         }
     }
+    always {
+        archiveArtifacts artifacts: 'tfsec-results.json', onlyIfSuccessful: false
+        archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
+        archiveArtifacts artifacts: 'tflint-results.json', onlyIfSuccessful: false
+    }
 }
 
 
