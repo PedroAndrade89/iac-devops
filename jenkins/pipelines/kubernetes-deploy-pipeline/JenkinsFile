@@ -17,31 +17,87 @@ pipeline {
             }
         }
 
-        stage('Retrieve Kubeconfig from AWS Secrets Manager') {
-            steps {
-                script {
-                    // Use the credentials binding plugin to securely inject AWS credentials
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'jenkins-ecr-access', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        // Retrieve the kubeconfig from AWS Secrets Manager
-                        sh '''
-                        aws secretsmanager get-secret-value --region us-east-1 --secret-id ${SECRET_NAME} --query SecretString --output text > kubeconfig
-                        '''
+        // Change directory to where the Terraform code is
+        dir('terraform/environments/stage') {
+            stage('Run TFLint') {
+                steps {
+                    sh 'tflint'
+                }
+            }
 
-                        // Set the KUBECONFIG environment variable for subsequent steps
-                        env.KUBECONFIG = "${WORKSPACE}/kubeconfig"
+            stage('Run TFSec') {
+                steps {
+                    sh 'tfsec .'
+                }
+            }
+//
+//             stage('Run Terraform Compliance') {
+//                 steps {
+//                     // Adjust the path to the 'features' directory as needed
+//                     sh 'terraform-compliance -f ../../features -p plan.out'
+//                 }
+//             }
+
+            stage('Run Checkov') {
+                steps {
+                    sh 'checkov -d .'
+                }
+            }
+
+            // Use the AWS credentials for Terraform operations
+            stage('Terraform Operations') {
+                steps {
+                    script {
+                        // Inject AWS credentials
+                        withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: 'jenkins-automate-user', // Use the ID you assigned in Jenkins Credentials Store
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]]) {
+                            // Terraform Init
+                            sh 'terraform init'
+
+                            // Terraform Validate
+                            sh 'terraform validate'
+
+                            // Terraform Plan
+                            sh 'terraform plan -out=plan.out'
+
+                            // Terraform Apply - Requires manual approval
+                            input 'Do you want to apply the Terraform plan?'
+                            sh 'terraform apply plan.out'
+                        }
                     }
                 }
             }
-        }
 
-        stage('Install Istio') {
-            steps {
-                sh """
-                ${env.ansible_dir}/ansible-playbook playbooks/istio-install.yml -vvv
-                """
-            }
-        }
-    }
+
+//         stage('Retrieve Kubeconfig from AWS Secrets Manager') {
+//             steps {
+//                 script {
+//                     // Use the credentials binding plugin to securely inject AWS credentials
+//                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'jenkins-ecr-access', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+//                         // Retrieve the kubeconfig from AWS Secrets Manager
+//                         sh '''
+//                         aws secretsmanager get-secret-value --region us-east-1 --secret-id ${SECRET_NAME} --query SecretString --output text > kubeconfig
+//                         '''
+//
+//                         // Set the KUBECONFIG environment variable for subsequent steps
+//                         env.KUBECONFIG = "${WORKSPACE}/kubeconfig"
+//                     }
+//                 }
+//             }
+//         }
+//
+//         stage('Install Istio') {
+//             steps {
+//                 sh """
+//                 ${env.ansible_dir}/ansible-playbook playbooks/istio-install.yml -vvv
+//                 """
+//             }
+//         }
+//     }
     post {
         always {
             // Cleanup

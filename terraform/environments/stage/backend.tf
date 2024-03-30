@@ -3,7 +3,7 @@ provider "aws" {
   default_tags {
     tags = var.default_tags
   }
-  profile = "sandbox"
+  #profile = "sandbox"
 
 }
 
@@ -28,7 +28,7 @@ terraform {
     bucket         = "formtf"
     key            = "nonprod/infra.tf"
     region         = "us-east-1"
-    profile        = "sandbox"
+    #profile        = "sandbox"
     dynamodb_table = "formtftbl"
   }
 }
