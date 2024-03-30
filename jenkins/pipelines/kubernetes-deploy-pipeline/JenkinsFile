@@ -31,7 +31,7 @@ pipeline {
                             error("TFLint reported errors.")
                         }
                     }
-                    archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
+                    archiveArtifacts artifacts: 'tflint-results.json', onlyIfSuccessful: false
                 }
             }
         }
