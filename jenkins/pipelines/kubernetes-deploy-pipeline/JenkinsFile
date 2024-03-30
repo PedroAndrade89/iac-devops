@@ -103,11 +103,11 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            //cleanWs() // Cleanup
-        }
-    }
+//     post {
+//         always {
+//             cleanWs() // Cleanup
+//         }
+//     }
 }
 
 
