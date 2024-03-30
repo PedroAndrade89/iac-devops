@@ -16,27 +16,16 @@ pipeline {
             }
         }
 
-        dir('terraform/environments/stage') { // Change directory to where the Terraform code is
-            stage('Run TFLint') {
-                steps {
+        // Wrap dir within a stage and steps
+        stage('Terraform Operations') {
+            steps {
+                // Change directory to where the Terraform code is
+                dir('terraform/environments/stage') {
+                    // Terraform operations are now within the steps block of a stage
                     sh 'tflint'
-                }
-            }
-
-            stage('Run TFSec') {
-                steps {
                     sh 'tfsec .'
-                }
-            }
-
-            stage('Run Checkov') {
-                steps {
                     sh 'checkov -d .'
-                }
-            }
 
-            stage('Terraform Operations') {
-                steps {
                     script {
                         withCredentials([[
                             $class: 'AmazonWebServicesCredentialsBinding',
@@ -61,6 +50,7 @@ pipeline {
         }
     }
 }
+
 
 
 //         stage('Retrieve Kubeconfig from AWS Secrets Manager') {
