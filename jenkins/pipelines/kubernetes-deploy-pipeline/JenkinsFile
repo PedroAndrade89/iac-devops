@@ -16,6 +16,26 @@ pipeline {
             }
         }
 
+        stage('Run TFLint') {
+            steps {
+                dir('terraform/environments/stage') {
+                    script {
+                        // Run tflint and save results
+                        sh 'tflint --format=json > tflint-results.json'
+
+                        // Read and parse the JSON output
+                        def tflintResults = readJSON file: 'tflint-results.json'
+
+                        // Determine if there are any errors
+                        if (tflintResults.errors.size() > 0) {
+                            error("TFLint reported errors.")
+                        }
+                    }
+                    archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
+                }
+            }
+        }
+
         stage('Run TFSec') {
             steps {
                 dir('terraform/environments/stage') {
@@ -38,26 +58,6 @@ pipeline {
                     }
                     // Archive the tfsec-results.json file immediately after it's created
                     archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
-                }
-            }
-        }
-
-        stage('Run TFLint') {
-            steps {
-                dir('terraform/environments/stage') {
-                    script {
-                        // Run tflint and save results
-                        sh 'tflint --format=json > tflint-results.json'
-
-                        // Read and parse the JSON output
-                        def tflintResults = readJSON file: 'tflint-results.json'
-
-                        // Determine if there are any errors
-                        if (tflintResults.errors.size() > 0) {
-                            error("TFLint reported errors.")
-                        }
-                    }
-                    archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
                 }
             }
         }
