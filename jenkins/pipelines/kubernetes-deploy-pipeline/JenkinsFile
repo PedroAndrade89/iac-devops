@@ -49,19 +49,10 @@ pipeline {
 
                             // Check for failed checks
                             if (checkovResults.results.failed_checks) {
-                                // Iterate over failed checks and handle them
-                                for (failedCheck in json.results.failed_checks) {
-                                    // Print out information about each failed check
-//                                     echo "Failed Check ID: ${failedCheck.check_id}"
-//                                     echo "Failed Check Name: ${failedCheck.check_name}"
-//                                     echo "File Path: ${failedCheck.file_path}"
-//                                     echo "File Line Range: ${failedCheck.file_line_range}"
-                                    // You can add further actions here, such as failing the build or taking corrective actions
-                                }
-                                archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
                                 // Fail the build if there are failed checks
                                 error("Checkov reported failed checks.")
                             }
+                            archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
                         } catch (Exception e) {
                             // If checkov command fails, print error message but continue execution
                             archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
