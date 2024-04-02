@@ -40,16 +40,19 @@ pipeline {
             steps {
                 dir('terraform/environments/stage') {
                     script {
-                        // Run checkov and save results
-                        sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
+                        // Run checkov and capture JSON output
+                        def checkovResults = sh(
+                            script: 'checkov -d . --quiet --framework terraform --output json',
+                            returnStdout: true
+                        ).trim()
 
-                        // Read and parse the JSON output
-                        def checkovResults = readJSON file: 'checkov-results.json'
+                        // Parse the JSON output
+                        def json = readJSON text: checkovResults
 
                         // Check for failed checks
-                        if (checkovResults.results.failed_checks) {
+                        if (json.results.failed_checks) {
                             // Iterate over failed checks and handle them
-                            for (failedCheck in checkovResults.results.failed_checks) {
+                            for (failedCheck in json.results.failed_checks) {
                                 // Print out information about each failed check
                                 echo "Failed Check ID: ${failedCheck.check_id}"
                                 echo "Failed Check Name: ${failedCheck.check_name}"
@@ -61,10 +64,10 @@ pipeline {
                             error("Checkov reported failed checks.")
                         }
                     }
-                    archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
                 }
             }
         }
+
 
 
         stage('Run TFSec') {
