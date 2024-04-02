@@ -600,7 +600,7 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
       "kubernetes.io/service-account.name" = kubernetes_service_account.serviceaccount.metadata.0.name
     }
 
-    generate_name = "jenkins-sa-secret"
+    generate_name = "jenkins-sa-secret-"
   }
   type                           = "kubernetes.io/service-account-token"
   wait_for_service_account_token = true
@@ -610,7 +610,7 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
 }
 
 locals {
-  secret_token = kubernetes_secret.jenkins_sa_secret.data["token"]
+  secret_token = base64decode(kubernetes_secret.jenkins_sa_secret.data["token"])
   debug_message = "Secret token value: ${local.secret_token}"
   token = try(base64decode(local.secret_token), null)
 }
@@ -619,7 +619,37 @@ output "debug_message" {
   value = local.debug_message
 }
 
+locals {
+  kubeconfig = <<KUBECONFIG
+apiVersion: v1
+kind: Config
+clusters:
+- name: "${var.cluster_name}"
+  cluster:
+    server: ${aws_eks_cluster.main.endpoint}
+    certificate-authority-data: ${aws_eks_cluster.main.certificate_authority[0].data}
+contexts:
+- name: "${var.cluster_name}-context"
+  context:
+    cluster: "${var.cluster_name}"
+    user: "${var.cluster_name}-jenkins-sa"
+current-context: "${var.cluster_name}-context"
+users:
+- name: "${var.cluster_name}-jenkins-sa"
+  user:
+    token: ${local.secret_token}
+KUBECONFIG
+}
 
+resource "aws_secretsmanager_secret" "kubeconfig" {
+  name        =  "${var.cluster_name}-jenkins-sa-kubecon"
+}
+
+resource "aws_secretsmanager_secret_version" "kubeconfig" {
+  secret_id     = aws_secretsmanager_secret.kubeconfig.id
+  secret_string = local.kubeconfig
+  version_stages = ["AWSCURRENT"]
+}
 
 
 ############################################################################################################
