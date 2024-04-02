@@ -125,18 +125,19 @@ pipeline {
             }
         }
 
-        stage('Install Istio') {
-            steps {
-                sh """
-                ${env.ansible_dir}/ansible-playbook playbooks/istio-install.yml -vvv
-                """
-            }
-        }
-        post {
-            always {
-                // Cleanup
-               cleanWs()
-            }
-        }
-    }
+       stage('Install Istio') {
+                   steps {
+                       sh """
+                       ${env.ansible_dir}/ansible-playbook playbooks/istio-install.yml -vvv
+                       """
+                   }
+               }
+       }
+
+       post {
+           always {
+               // Cleanup
+              cleanWs()
+           }
+       }
 }
