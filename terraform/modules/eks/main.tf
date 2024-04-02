@@ -609,6 +609,16 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
   ]
 }
 
+resource "null_resource" "example" {
+  depends_on = [
+      kubernetes_secret.jenkins_sa_secret,
+  ]
+  # Trigger sleep after some other operation
+  provisioner "local-exec" {
+    command = "sleep 5"
+  }
+}
+
 locals {
   secret_token = base64decode(kubernetes_secret.jenkins_sa_secret.data["token"])
   debug_message = "Secret token value: ${local.secret_token}"
