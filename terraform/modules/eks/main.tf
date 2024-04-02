@@ -589,12 +589,13 @@ resource "kubernetes_cluster_role_binding" "rolebinding" {
   }
 }
 
-data "kubernetes_secret" "jenkins-sa-secret" {
-  metadata {
-    name      = "${kubernetes_service_account.serviceaccount.default_secret_name}"
-    namespace = "default"
-  }
+data "kubernetes_secret" "jenkins_sa_secret" {
+  for_each = { for s in data.kubernetes_service_account.jenkins_sa.secrets : s.name => s }
 
+  metadata {
+    name      = each.key
+    namespace = data.kubernetes_service_account.jenkins_sa.metadata.namespace
+  }
   depends_on = [
     kubernetes_service_account.serviceaccount,
   ]
