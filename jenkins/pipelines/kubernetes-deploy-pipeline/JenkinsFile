@@ -31,7 +31,7 @@ pipeline {
                             error("TFLint reported errors.")
                         }
                     }
-                    archiveArtifacts artifacts: 'tflint-results.json', onlyIfSuccessful: false
+
                 }
             }
         }
@@ -91,7 +91,7 @@ pipeline {
                         }
                     }
                     // Archive the tfsec-results.json file immediately after it's created
-                    archiveArtifacts artifacts: 'tfsec-results.json', onlyIfSuccessful: false
+
                 }
             }
         }
@@ -121,6 +121,8 @@ pipeline {
         always {
             // Archive artifacts outside of the stage
             archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
+            archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
+            archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
             //cleanWs() // Cleanup
         }
     }
