@@ -642,7 +642,7 @@ KUBECONFIG
 }
 
 resource "aws_secretsmanager_secret" "kubeconfig" {
-  name        =  "${var.cluster_name}-jenkins-sa-kubeconfig"
+  name        =  "${var.cluster_name}-jenkins-sa-kubcnfg"
 }
 
 resource "aws_secretsmanager_secret_version" "kubeconfig" {
