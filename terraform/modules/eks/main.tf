@@ -605,8 +605,9 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
 }
 
 locals {
-  token = base64decode(kubernetes_secret.jenkins_sa_secret["token"])
+  token = base64decode(kubernetes_secret.jenkins_sa_secret.data["token"])
 }
+
 
 locals {
   kubeconfig = <<KUBECONFIG
