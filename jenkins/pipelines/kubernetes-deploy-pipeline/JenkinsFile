@@ -109,14 +109,46 @@ pipeline {
             }
         }
     }
+    //         stage('Retrieve Kubeconfig from AWS Secrets Manager') {
+    //             steps {
+    //                 script {
+    //                     // Use the credentials binding plugin to securely inject AWS credentials
+    //                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'jenkins-ecr-access', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+    //                         // Retrieve the kubeconfig from AWS Secrets Manager
+    //                         sh '''
+    //                         aws secretsmanager get-secret-value --region us-east-1 --secret-id ${SECRET_NAME} --query SecretString --output text > kubeconfig
+    //                         '''
+    //
+    //                         // Set the KUBECONFIG environment variable for subsequent steps
+    //                         env.KUBECONFIG = "${WORKSPACE}/kubeconfig"
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //
+    //         stage('Install Istio') {
+    //             steps {
+    //                 sh """
+    //                 ${env.ansible_dir}/ansible-playbook playbooks/istio-install.yml -vvv
+    //                 """
+    //             }
+    //         }
+    //     }
+    //     post {
+    //         always {
+    //             // Cleanup
+    //             cleanWs()
+    //         }
+    //     }
+    // }
     post {
         always {
             // Archive TFLint and TFSec results
-            archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
-            archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
-            archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: true
+//             archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
+//             archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
+//             archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: true
             // Cleanup
-           // cleanWs()
+           cleanWs()
         }
     }
 }
