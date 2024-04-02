@@ -12,93 +12,78 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${env.branch_name}", credentialsId: 'github-pedro', url: params.git_url
+                script {
+                    // Checkout code
+                    git branch: "${env.branch_name}", credentialsId: 'github-pedro', url: params.git_url
+                }
             }
         }
-
         stage('Run TFLint') {
+            when {
+                expression { env.TFLINT == 'true' }
+            }
             steps {
-                dir('terraform/environments/stage') {
-                    script {
-                        // Run tflint and save results
+                script {
+                    // Run TFLint
+                    dir('terraform/environments/stage') {
                         sh 'tflint --format=json > tflint-results.json'
-
-                        // Read and parse the JSON output
                         def tflintResults = readJSON file: 'tflint-results.json'
-
-                        // Determine if there are any errors
                         if (tflintResults.errors.size() > 0) {
                             error("TFLint reported errors.")
                         }
                     }
-
                 }
             }
         }
-
         stage('Run Checkov') {
+            when {
+                expression { env.CHECKOV == 'true' }
+            }
             steps {
-                dir('terraform/environments/stage') {
-                    script {
+                script {
+                    // Run Checkov
+                    dir('terraform/environments/stage') {
                         try {
-                            // Run checkov and save results
                             sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
-
-                            // Read and parse the JSON output
                             def checkovResults = readJSON file: 'checkov-results.json'
-
-                            // Check for failed checks
                             if (checkovResults.results.failed_checks) {
-                                // Fail the build if there are failed checks
                                 error("Checkov reported failed checks.")
                             }
-                            archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
                         } catch (Exception e) {
-                            // If checkov command fails, print error message but continue execution
-                            archiveArtifacts artifacts: 'checkov-results.json', onlyIfSuccessful: false
-                            error("Error running checkov: ${e.message}")
-
+                            error("Error running Checkov: ${e.message}")
                         }
                     }
                 }
+                // Archive Checkov results
+                archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
             }
         }
-
-
-
         stage('Run TFSec') {
+            when {
+                expression { env.TFSEC == 'true' }
+            }
             steps {
-                dir('terraform/environments/stage') {
-                    script {
-                        // Run tfsec and output results to a file
+                script {
+                    // Run TFSec
+                    dir('terraform/environments/stage') {
                         sh 'tfsec . --format=json --soft-fail > tfsec-results.json'
-
-                        // Read the tfsec results file
                         def tfsecResults = readJSON file: 'tfsec-results.json'
-
-                        // Check for critical results
-                        boolean hasCriticals = tfsecResults.results.any { result ->
-                            result.severity == "CRITICAL"
-                        }
-
-                        // Fail the pipeline if there are critical alerts
-                        if (hasCriticals) {
-                            error("Critical alerts found by tfsec.")
+                        if (tfsecResults.results.any { result -> result.severity == "CRITICAL" }) {
+                            error("Critical alerts found by TFSec.")
                         }
                     }
-                    // Archive the tfsec-results.json file immediately after it's created
-
                 }
+                // Archive TFSec results
+                archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
             }
         }
-
-        stage('Terraform init,plan,apply') {
+        stage('Terraform init, plan, apply') {
             steps {
                 dir('terraform/environments/stage') {
                     script {
                         withCredentials([[
                             $class: 'AmazonWebServicesCredentialsBinding',
-                            credentialsId: 'jenkins-automate-user', // Use the ID you assigned in Jenkins Credentials Store
+                            credentialsId: 'jenkins-automate-user',
                             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                         ]]) {
@@ -115,47 +100,11 @@ pipeline {
     }
     post {
         always {
-            // Archive artifacts outside of the stage
-            //archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
+            // Archive TFLint and TFSec results
             archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
             archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
-            //cleanWs() // Cleanup
+            // Cleanup
+            cleanWs()
         }
     }
 }
-
-
-
-
-//         stage('Retrieve Kubeconfig from AWS Secrets Manager') {
-//             steps {
-//                 script {
-//                     // Use the credentials binding plugin to securely inject AWS credentials
-//                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'jenkins-ecr-access', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-//                         // Retrieve the kubeconfig from AWS Secrets Manager
-//                         sh '''
-//                         aws secretsmanager get-secret-value --region us-east-1 --secret-id ${SECRET_NAME} --query SecretString --output text > kubeconfig
-//                         '''
-//
-//                         // Set the KUBECONFIG environment variable for subsequent steps
-//                         env.KUBECONFIG = "${WORKSPACE}/kubeconfig"
-//                     }
-//                 }
-//             }
-//         }
-//
-//         stage('Install Istio') {
-//             steps {
-//                 sh """
-//                 ${env.ansible_dir}/ansible-playbook playbooks/istio-install.yml -vvv
-//                 """
-//             }
-//         }
-//     }
-//     post {
-//         always {
-//             // Cleanup
-//             cleanWs()
-//         }
-//     }
-// }
