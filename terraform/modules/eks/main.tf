@@ -597,7 +597,6 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
 
     generate_name = "jenkins-sa-secret"
   }
-
   type                           = "kubernetes.io/service-account-token"
   wait_for_service_account_token = true
   depends_on = [
@@ -606,7 +605,7 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
 }
 
 locals {
-  token = base64decode(data.kubernetes_secret.jenkins_sa_secret["token"])
+  token = base64decode(kubernetes_secret.jenkins_sa_secret["token"])
 }
 
 locals {
