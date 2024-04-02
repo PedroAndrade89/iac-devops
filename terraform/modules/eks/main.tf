@@ -602,7 +602,7 @@ data "kubernetes_secret" "jenkins_sa_secret" {
 }
 
 locals {
-  token = base64decode(data.kubernetes_secret.jenkins-sa-secret.data["token"])
+  token = base64decode(kubernetes_secret.jenkins-sa-secret.data["token"])
 }
 
 locals {
