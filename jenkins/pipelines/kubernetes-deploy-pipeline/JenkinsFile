@@ -50,6 +50,7 @@ pipeline {
                                 error("Checkov reported failed checks.")
                             }
                         } catch (Exception e) {
+                            archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
                             error("Error running Checkov: ${e.message}")
                         }
                     }
