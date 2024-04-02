@@ -601,6 +601,7 @@ data "kubernetes_secret" "jenkins_sa_secret" {
   ]
 }
 
+
 locals {
   token = base64decode(data.kubernetes_secret.jenkins_sa_secret["token"])
 }
