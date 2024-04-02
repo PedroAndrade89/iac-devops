@@ -620,37 +620,7 @@ output "debug_message" {
 }
 
 
-locals {
-  kubeconfig = <<KUBECONFIG
-apiVersion: v1
-kind: Config
-clusters:
-- name: "${var.cluster_name}"
-  cluster:
-    server: ${aws_eks_cluster.main.endpoint}
-    certificate-authority-data: ${aws_eks_cluster.main.certificate_authority[0].data}
-contexts:
-- name: "${var.cluster_name}-context"
-  context:
-    cluster: "${var.cluster_name}"
-    user: "${var.cluster_name}-jenkins-sa"
-current-context: "${var.cluster_name}-context"
-users:
-- name: "${var.cluster_name}-jenkins-sa"
-  user:
-    token: ${local.token}
-KUBECONFIG
-}
 
-resource "aws_secretsmanager_secret" "kubeconfig" {
-  name        =  "${var.cluster_name}-jenkins-sa-kubecon"
-}
-
-resource "aws_secretsmanager_secret_version" "kubeconfig" {
-  secret_id     = aws_secretsmanager_secret.kubeconfig.id
-  secret_string = local.kubeconfig
-  version_stages = ["AWSCURRENT"]
-}
 
 ############################################################################################################
 # PLUGINS
