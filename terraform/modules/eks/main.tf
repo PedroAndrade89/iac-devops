@@ -595,8 +595,6 @@ resource "kubernetes_cluster_role_binding" "rolebinding" {
 }
 
 resource "kubernetes_secret" "jenkins_sa_secret" {
-  # Mark the entire secret as sensitive
-  sensitive = true
   metadata {
     annotations = {
       "kubernetes.io/service-account.name" = kubernetes_service_account.serviceaccount.metadata.0.name
