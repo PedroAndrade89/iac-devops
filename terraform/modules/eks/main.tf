@@ -590,7 +590,7 @@ resource "kubernetes_cluster_role_binding" "rolebinding" {
 }
 
 data "kubernetes_secret" "jenkins_sa_secret" {
-  for_each = { for s in data.kubernetes_service_account.jenkins_sa.secrets : s.name => s }
+  for_each = { for s in kubernetes_service_account.serviceaccount.secrets : s.name => s }
 
   metadata {
     name      = each.key
