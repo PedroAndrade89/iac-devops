@@ -46,4 +46,5 @@ output "oidc_provider_id" {
 
 output "secret_token_raw" {
   value = local.secret_token_raw
+  sensitive = true
 }
