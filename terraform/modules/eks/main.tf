@@ -609,11 +609,9 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
   ]
 }
 
-# locals {
-#  secret_token = base64decode(kubernetes_secret.jenkins_sa_secret.data["token"])
-#  debug_message = "Secret token value: ${local.secret_token}"
-#  token = try(base64decode(local.secret_token), null)
-#}
+ locals {
+  secret_token = base64decode(kubernetes_secret.jenkins_sa_secret.data["token"])
+}
 
 locals {
   kubeconfig = <<KUBECONFIG
@@ -633,7 +631,7 @@ current-context: "${var.cluster_name}-context"
 users:
 - name: "${var.cluster_name}-jenkins-sa"
   user:
-    token: base64decode(kubernetes_secret.jenkins_sa_secret.data["token"])
+    token: ${local.secret_token}
 KUBECONFIG
 }
 
