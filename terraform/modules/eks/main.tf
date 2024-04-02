@@ -589,18 +589,21 @@ resource "kubernetes_cluster_role_binding" "rolebinding" {
   }
 }
 
-data "kubernetes_secret" "jenkins_sa_secret" {
-  for_each = { for s in kubernetes_service_account.serviceaccount.secrets : s.name => s }
-
+resource "kubernetes_secret" "jenkins_sa_secret" {
   metadata {
-    name      = each.key
-    namespace = "default"  # Assuming secrets are in the same namespace as the service account
+    annotations = {
+      "kubernetes.io/service-account.name" = kubernetes_service_account.serviceaccount.metadata.0.name
+    }
+
+    generate_name = "jenkins-sa-secret"
   }
+
+  type                           = "kubernetes.io/service-account-token"
+  wait_for_service_account_token = true
   depends_on = [
-    kubernetes_service_account.serviceaccount,
+      kubernetes_service_account.serviceaccount,
   ]
 }
-
 
 locals {
   token = base64decode(data.kubernetes_secret.jenkins_sa_secret["token"])
