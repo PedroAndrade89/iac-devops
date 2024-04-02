@@ -141,14 +141,10 @@ pipeline {
     //         }
     //     }
     // }
-//     post {
-//         always {
-//             // Archive TFLint and TFSec results
-// //             archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
-// //             archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
-// //             archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: true
-//             // Cleanup
-//            cleanWs()
-//         }
-//     }
+    post {
+        always {
+            // Cleanup
+           cleanWs()
+        }
+    }
 }
