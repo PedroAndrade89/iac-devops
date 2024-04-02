@@ -615,10 +615,6 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
 #  token = try(base64decode(local.secret_token), null)
 #}
 
-output "debug_message" {
-  value = local.debug_message
-}
-
 locals {
   kubeconfig = <<KUBECONFIG
 apiVersion: v1
