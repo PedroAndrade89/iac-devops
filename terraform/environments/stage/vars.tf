@@ -91,7 +91,7 @@ variable "cluster_addons" {
 variable "enabled_cluster_log_types" {
   description = "List of strings specifying cluster log types"
   type        = list(string)
-  default     = ["audit", "api", "authenticator"]
+  default     = ["audit", "api", "authenticator","scheduler","controllerManager"]
 }
 
 variable "eks_endpoint_public_access" {
