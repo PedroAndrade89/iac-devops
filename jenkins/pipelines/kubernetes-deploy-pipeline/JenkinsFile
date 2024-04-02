@@ -35,38 +35,41 @@ pipeline {
                 }
             }
         }
-       stage('Run Checkov') {
-           when {
-               expression { env.CHECKOV == 'true' }
-           }
-           steps {
-               script {
-                   // Initialize flag variable
-                   def checkovFailed = false
+        stage('Run Checkov') {
+            when {
+                expression { env.CHECKOV == 'true' }
+            }
+            steps {
+                script {
+                    // Initialize flag variable
+                    def checkovFailed = false
 
-                   // Run Checkov
-                   dir('terraform/environments/stage') {
-                       try {
-                           sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
-                           def checkovResults = readJSON file: 'checkov-results.json'
-                           if (checkovResults.results.failed_checks) {
-                               checkovFailed = true
-                               error("Checkov reported failed checks.")
-                           }
-                       } catch (Exception e) {
-                           checkovFailed = true
-                           error("Error running Checkov: ${e.message}")
-                       }
-                   if (checkovFailed) {
-                     archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
-                     error("Checkov step failed.")
-                   }
-                   else{
-                    archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
-                   }
-               }
-           }
-       }
+                    // Run Checkov
+                    dir('terraform/environments/stage') {
+                        try {
+                            sh 'checkov -d . --quiet --framework terraform --output json > checkov-results.json'
+                            def checkovResults = readJSON file: 'checkov-results.json'
+                            if (checkovResults.results.failed_checks) {
+                                checkovFailed = true
+                                error("Checkov reported failed checks.")
+                            }
+                        } catch (FileNotFoundException e) {
+                            checkovFailed = true
+                            error("Checkov results file not found: ${e.message}")
+                        } catch (Exception e) {
+                            checkovFailed = true
+                            error("Error running Checkov: ${e.message}")
+                        }
+                    }
+                    // Archive Checkov results
+                    if (checkovFailed) {
+                      archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
+                      error("Checkov step failed.")
+                    }
+                }
+            }
+
+        }
 
         stage('Run TFSec') {
             when {
@@ -113,6 +116,7 @@ pipeline {
             // Archive TFLint and TFSec results
             archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
             archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
+            archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: true
             // Cleanup
             cleanWs()
         }
