@@ -542,6 +542,11 @@ resource "kubernetes_config_map" "aws_auth" {
         groups   = ["system:masters"]
       },
       {
+        rolearn  = "arn:aws:iam::154396925587:role/AWSReservedSSO_InfrastructureNonprod_65fb350bae012141"
+        username = "AWSReservedSSO_InfrastructureNonprod_65fb350bae012141"
+        groups   = ["system:masters"]
+       },
+      {
         rolearn  = aws_iam_role.node_role.arn
         username = "system:node:{{EC2PrivateDNSName}}"
         groups   = ["system:bootstrappers", "system:nodes"]
