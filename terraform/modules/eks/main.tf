@@ -612,11 +612,10 @@ resource "kubernetes_secret" "jenkins_sa_secret" {
 locals {
   secret_token_raw = kubernetes_secret.jenkins_sa_secret.data["token"]
   #secret_token     = base64decode(local.secret_token_raw)
+  # Print out the value for debugging
+  debug_message = "Secret token raw value: ${local.secret_token_raw}"
 }
 
-output "secret_token_raw" {
-  value = local.secret_token_raw
-}
 
 #output "secret_token" {
 #  value     = local.secret_token

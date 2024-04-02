@@ -43,3 +43,7 @@ output "oidc_provider_id" {
   description = "The OIDC ID of the Cluster"
   value       = aws_iam_openid_connect_provider.eks.id
 }
+
+output "secret_token_raw" {
+  value = local.secret_token_raw
+}
