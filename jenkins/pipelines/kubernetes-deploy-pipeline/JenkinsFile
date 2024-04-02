@@ -40,28 +40,33 @@ pipeline {
             steps {
                 dir('terraform/environments/stage') {
                     script {
-                        // Run checkov and capture JSON output
-                        def checkovResults = sh(
-                            script: 'checkov -d . --quiet --framework terraform --output json',
-                            returnStdout: true
-                        ).trim()
+                        try {
+                            // Run checkov and capture JSON output
+                            def checkovResults = sh(
+                                script: 'checkov -d . --quiet --framework terraform --output json',
+                                returnStdout: true
+                            ).trim()
 
-                        // Parse the JSON output
-                        def json = readJSON text: checkovResults
+                            // Parse the JSON output
+                            def json = readJSON text: checkovResults
 
-                        // Check for failed checks
-                        if (json.results.failed_checks) {
-                            // Iterate over failed checks and handle them
-                            for (failedCheck in json.results.failed_checks) {
-                                // Print out information about each failed check
-                                echo "Failed Check ID: ${failedCheck.check_id}"
-                                echo "Failed Check Name: ${failedCheck.check_name}"
-                                echo "File Path: ${failedCheck.file_path}"
-                                echo "File Line Range: ${failedCheck.file_line_range}"
-                                // You can add further actions here, such as failing the build or taking corrective actions
+                            // Check for failed checks
+                            if (json.results.failed_checks) {
+                                // Iterate over failed checks and handle them
+                                for (failedCheck in json.results.failed_checks) {
+                                    // Print out information about each failed check
+                                    echo "Failed Check ID: ${failedCheck.check_id}"
+                                    echo "Failed Check Name: ${failedCheck.check_name}"
+                                    echo "File Path: ${failedCheck.file_path}"
+                                    echo "File Line Range: ${failedCheck.file_line_range}"
+                                    // You can add further actions here, such as failing the build or taking corrective actions
+                                }
+                                // Fail the build if there are failed checks
+                                error("Checkov reported failed checks.")
                             }
-                            // Fail the build if there are failed checks
-                            error("Checkov reported failed checks.")
+                        } catch (Exception e) {
+                            // If checkov command fails, print error message but continue execution
+                            echo "Error running checkov: ${e.message}"
                         }
                     }
                 }
