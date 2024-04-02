@@ -165,7 +165,7 @@ resource "aws_eks_node_group" "main" {
 
   launch_template {
     id      = aws_launch_template.eks_node_group.id
-    version = "$Latest"
+    version = "1"
   }
 
   instance_types       = each.value.instance_types
