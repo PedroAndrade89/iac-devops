@@ -66,7 +66,9 @@ pipeline {
                             }
                         } catch (Exception e) {
                             // If checkov command fails, print error message but continue execution
-                            echo "Error running checkov: ${e.message}"
+                            archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
+                            error("Error running checkov: ${e.message}")
+
                         }
                     }
                 }
@@ -125,7 +127,7 @@ pipeline {
     post {
         always {
             // Archive artifacts outside of the stage
-            archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
+            //archiveArtifacts artifacts: 'terraform/environments/stage/checkov-results.json', onlyIfSuccessful: false
             archiveArtifacts artifacts: 'terraform/environments/stage/tflint-results.json', onlyIfSuccessful: false
             archiveArtifacts artifacts: 'terraform/environments/stage/tfsec-results.json', onlyIfSuccessful: false
             //cleanWs() // Cleanup
