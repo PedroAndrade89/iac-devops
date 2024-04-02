@@ -566,7 +566,7 @@ resource "kubernetes_config_map" "aws_auth" {
 
 resource "kubernetes_service_account" "serviceaccount" {
   metadata {
-    name = "jenkins-sa"
+    name      = "jenkins-sa"
     namespace = "default"
   }
 }
@@ -578,13 +578,13 @@ resource "kubernetes_cluster_role_binding" "rolebinding" {
 
   role_ref {
     api_group = "rbac.authorization.k8s.io"
-    kind = "ClusterRole"
-    name = "admin"  # Be cautious with powerful roles like cluster-admin
+    kind      = "ClusterRole"
+    name      = "admin"  # Be cautious with powerful roles like cluster-admin
   }
 
   subject {
-    kind = "ServiceAccount"
-    name = kubernetes_service_account.serviceaccount.metadata[0].name
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.serviceaccount.metadata[0].name
     namespace = "default"
   }
 }
@@ -594,7 +594,7 @@ data "kubernetes_secret" "jenkins_sa_secret" {
 
   metadata {
     name      = each.key
-    namespace = data.kubernetes_service_account.jenkins_sa.metadata.namespace
+    namespace = "default"  # Assuming secrets are in the same namespace as the service account
   }
   depends_on = [
     kubernetes_service_account.serviceaccount,
@@ -602,7 +602,7 @@ data "kubernetes_secret" "jenkins_sa_secret" {
 }
 
 locals {
-  token = base64decode(kubernetes_secret.jenkins-sa-secret.data["token"])
+  token = base64decode(data.kubernetes_secret.jenkins_sa_secret["token"])
 }
 
 locals {
