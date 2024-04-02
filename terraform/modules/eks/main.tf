@@ -638,8 +638,6 @@ KUBECONFIG
 }
 
 resource "aws_secretsmanager_secret" "kubeconfig" {
-  # Mark the entire secret as sensitive
-  sensitive = true
   name        =  "${var.cluster_name}-jenkins-sa-kube"
 }
 
