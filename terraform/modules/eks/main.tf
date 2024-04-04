@@ -598,7 +598,7 @@ resource "kubernetes_role_binding" "jenkins_pipeline_access_binding" {
   for_each = toset(var.jenkins_pipeline_access_namespaces.namespaces)
 
   metadata {
-    name      = "dev-access-binding-${each.value}"
+    name      = "jenkins-access-binding-${each.value}"
     namespace = each.value
   }
 
