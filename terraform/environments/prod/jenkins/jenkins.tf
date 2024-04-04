@@ -107,9 +107,14 @@ resource "aws_instance" "jenkins-slave-1" {
               sudo wget -O hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_65
               sudo chmod +x /bin/hadolint
               sudo curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-              sudo yum install fontconfig java-17-openjdk -y
-              sudo yum install jenkins docker git python3-devel libffi-devel openssl-devel -y
+              sudo yum install fontconfig java-17-openjdk yum-utils -y
+              sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+              sudo yum install jenkins docker git python3-devel libffi-devel openssl-devel terraform -y
               sudo yum groupinstall 'Development Tools' -y
+              curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+              wget https://github.com/aquasecurity/tfsec/releases/download/v1.27.1/tfsec-linux-amd64
+              chmod +x tfsec-linux-amd64
+              sudo mv tfsec-linux-amd64 /usr/local/bin/tfsec
               sudo systemctl enable docker
               sudo systemctl start docker
               sudo systemctl start jenkins
