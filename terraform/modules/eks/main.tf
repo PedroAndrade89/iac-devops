@@ -623,11 +623,11 @@ resource "kubernetes_config_map" "aws_auth" {
         rolearn  = aws_iam_role.node_role.arn
         username = "system:node:{{EC2PrivateDNSName}}"
         groups   = ["system:bootstrappers", "system:nodes"]
-      }
+      },
       {
-        rolearn  = ${var.dev_access_namespaces.iam_group_arn}
-        username = ${var.dev_access_namespaces.iam_group}
-        groups   = ${var.dev_access_namespaces.k8s_group_name}
+        rolearn  = var.dev_access_namespaces.iam_group_arn
+        username = var.dev_access_namespaces.iam_group
+        groups   = var.dev_access_namespaces.k8s_group_name
        }
     ])
     mapUsers = yamlencode([
@@ -637,9 +637,9 @@ resource "kubernetes_config_map" "aws_auth" {
         groups   = ["system:masters"]
       },
       {
-        rolearn  = ${var.jenkins_pipeline_access_namespaces.iam_group_arn}
-        username = ${var.jenkins_pipeline_access_namespaces.iam_group}
-        groups   = ${var.jenkins_pipeline_access_namespaces.k8s_group_name}
+        rolearn  = var.jenkins_pipeline_access_namespaces.iam_group_arn
+        username = var.jenkins_pipeline_access_namespaces.iam_group
+        groups   = var.jenkins_pipeline_access_namespaces.k8s_group_name
       }
     ])
   }
