@@ -637,9 +637,9 @@ resource "kubernetes_config_map" "aws_auth" {
         groups   = ["system:masters"]
       },
       {
-        rolearn  = var.jenkins_pipeline_access_namespaces.iam_group_arn
-        username = var.jenkins_pipeline_access_namespaces.iam_group
-        groups   = var.jenkins_pipeline_access_namespaces.k8s_group_name
+        rolearn  = var.jenkins_pipeline_access_namespaces.iam_user_arn
+        username = var.jenkins_pipeline_access_namespaces.iam_user
+        groups   = var.jenkins_pipeline_access_namespaces.k8s_user_name
       }
     ])
   }
