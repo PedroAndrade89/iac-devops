@@ -73,3 +73,28 @@ variable "enabled_cluster_log_types" {
   type        = list(string)
   default     = ["audit", "api", "authenticator"]
 }
+
+variable "dev_access_namespaces" {
+  type = map(object({
+    k8s_group_name: string
+    iam_group: string
+    iam_group_arn: string
+    namespaces : list(string)
+    api_groups = list(string)
+    resources  = list(string)
+    verbs      = list(string)
+  }))
+}
+
+variable "jenkins_pipeline_access_namespaces" {
+    type = map(object({
+      k8s_user_name: string
+      iam_user: string
+      iam_user_arn: string
+      namespaces : list(string)
+      api_groups = list(string)
+      resources  = list(string)
+      verbs      = list(string)
+    }))
+  }
+}

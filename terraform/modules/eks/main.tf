@@ -527,6 +527,79 @@ resource "aws_iam_role_policy_attachment" "eks_admin_role_policy_attach" {
   policy_arn = aws_iam_policy.eks_admin_policy.arn
 }
 
+resource "kubernetes_role" "dev_access_role" {
+  for_each = toset(var.dev_access_namespaces.namespaces)
+
+  metadata {
+    name      = "dev-access-role"
+    namespace = each.value
+  }
+
+  rule {
+    api_groups = var.dev_access_namespaces.api_groups
+    resources  = var.dev_access_namespaces.resources
+    verbs      = var.dev_access_namespaces.verbs
+  }
+}
+
+resource "kubernetes_role" "jenkins_deploy_access_role" {
+  for_each = toset(var.jenkins_pipeline_access_namespaces.namespaces)
+
+  metadata {
+    name      = "jenkins_deploy_access_role"
+    namespace = each.value
+  }
+
+  rule {
+    api_groups = var.jenkins_pipeline_access_namespaces.api_groups
+    resources  = var.jenkins_pipeline_access_namespaces.resources
+    verbs      = var.jenkins_pipeline_access_namespaces.verbs
+  }
+}
+
+resource "kubernetes_role_binding" "dev_access_binding" {
+  for_each = toset(var.dev_access_namespaces.namespaces)
+
+  metadata {
+    name      = "dev-access-binding-${each.value}"
+    namespace = each.value
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role.dev_access_role[each.value].metadata[0].name
+  }
+
+  subject {
+    kind = "Group"
+    name = var.dev_access_namespaces.k8s_group_name
+    api_group = "rbac.authorization.k8s.io"
+  }
+}
+
+resource "kubernetes_role_binding" "jenkins_pipeline_access_binding" {
+  for_each = toset(var.jenkins_pipeline_access_namespaces.namespaces)
+
+  metadata {
+    name      = "dev-access-binding-${each.value}"
+    namespace = each.value
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role.jenkins_deploy_access_role[each.value].metadata[0].name
+  }
+
+  subject {
+    kind = "User"
+    name = var.jenkins_pipeline_access_namespaces.k8s_user_name
+    api_group = "rbac.authorization.k8s.io"
+  }
+}
+
+
 # Update the aws-auth ConfigMap to include the IAM group
 resource "kubernetes_config_map" "aws_auth" {
   metadata {
@@ -551,12 +624,22 @@ resource "kubernetes_config_map" "aws_auth" {
         username = "system:node:{{EC2PrivateDNSName}}"
         groups   = ["system:bootstrappers", "system:nodes"]
       }
+      {
+        rolearn  = ${var.dev_access_namespaces.iam_group_arn}
+        username = ${var.dev_access_namespaces.iam_group}
+        groups   = ${var.dev_access_namespaces.k8s_group_name}
+       }
     ])
     mapUsers = yamlencode([
       {
         userarn  = data.aws_caller_identity.current.arn
         username = split("/", data.aws_caller_identity.current.arn)[1]
         groups   = ["system:masters"]
+      },
+      {
+        rolearn  = ${var.jenkins_pipeline_access_namespaces.iam_group_arn}
+        username = ${var.jenkins_pipeline_access_namespaces.iam_group}
+        groups   = ${var.jenkins_pipeline_access_namespaces.k8s_group_name}
       }
     ])
   }
