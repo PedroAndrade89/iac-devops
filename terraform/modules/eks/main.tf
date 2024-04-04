@@ -547,6 +547,9 @@ resource "kubernetes_role" "dev_access_role" {
     resources  = var.dev_access_namespaces.resources
     verbs      = var.dev_access_namespaces.verbs
   }
+  depends_on = [
+        kubernetes_namespace.dev_namespace
+    ]
 }
 
 resource "kubernetes_role" "jenkins_deploy_access_role" {
@@ -562,6 +565,9 @@ resource "kubernetes_role" "jenkins_deploy_access_role" {
     resources  = var.jenkins_pipeline_access_namespaces.resources
     verbs      = var.jenkins_pipeline_access_namespaces.verbs
   }
+  depends_on = [
+        kubernetes_namespace.dev_namespace
+    ]
 }
 
 resource "kubernetes_role_binding" "dev_access_binding" {
@@ -583,6 +589,9 @@ resource "kubernetes_role_binding" "dev_access_binding" {
     name = var.dev_access_namespaces.k8s_group_name
     api_group = "rbac.authorization.k8s.io"
   }
+  depends_on = [
+        kubernetes_namespace.dev_namespace
+    ]
 }
 
 resource "kubernetes_role_binding" "jenkins_pipeline_access_binding" {
@@ -604,6 +613,9 @@ resource "kubernetes_role_binding" "jenkins_pipeline_access_binding" {
     name = var.jenkins_pipeline_access_namespaces.k8s_user_name
     api_group = "rbac.authorization.k8s.io"
   }
+  depends_on = [
+      kubernetes_namespace.dev_namespace
+  ]
 }
 
 
