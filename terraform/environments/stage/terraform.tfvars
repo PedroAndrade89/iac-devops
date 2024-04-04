@@ -59,7 +59,7 @@ enabled_cluster_log_types = ["audit", "api", "authenticator","scheduler","contro
 eks_endpoint_public_access = true
 eks_endpoint_private_access = false
 
-dev_access_namespaces {
+dev_access_namespaces = {
   namespaces = ["rms-cte-global-interface", "rms-cte-qapter-claims", "rms-cte-qapter-mobile","rms-cte-qapter-vi"]
   iam_group = "developers-group"
   iam_group_arn = "arn:aws:iam::154396925587:group/developers-group"
@@ -69,7 +69,7 @@ dev_access_namespaces {
   verbs      = ["get", "list", "watch", "create", "delete", "update", "patch"]
 }
 
-jenkins_pipeline_access_namespaces {
+jenkins_pipeline_access_namespaces = {
   namespaces = ["rms-cte-global-interface", "rms-cte-qapter-claims", "rms-cte-qapter-mobile","rms-cte-qapter-vi"]
   iam_user = "jenkins-k8s-pipelines-user"
   iam_user_arn = "arn:aws:iam::154396925587:user/jenkins-k8s-pipelines-user"
