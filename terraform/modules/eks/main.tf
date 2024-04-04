@@ -527,6 +527,13 @@ resource "aws_iam_role_policy_attachment" "eks_admin_role_policy_attach" {
   policy_arn = aws_iam_policy.eks_admin_policy.arn
 }
 
+resource "kubernetes_namespace" "dev_namespace" {
+  for_each = toset(var.dev_access_namespaces.namespaces)
+  metadata {
+    name = each.value
+  }
+}
+
 resource "kubernetes_role" "dev_access_role" {
   for_each = toset(var.dev_access_namespaces.namespaces)
 
