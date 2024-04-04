@@ -133,4 +133,3 @@ variable "jenkins_pipeline_access_namespaces" {
       verbs      = list(string)
     }))
   }
-}
