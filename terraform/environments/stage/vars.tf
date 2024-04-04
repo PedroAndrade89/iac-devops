@@ -134,5 +134,3 @@ variable "jenkins_pipeline_access_namespaces" {
     }))
   }
 }
-
-
