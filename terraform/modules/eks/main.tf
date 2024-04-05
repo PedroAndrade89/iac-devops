@@ -352,30 +352,6 @@ resource "aws_iam_role_policy_attachment" "vpc_cni_policy" {
   role       = aws_iam_role.vpc_cni_role.name
 }
 
-resource "kubernetes_service_account" "eks_admin" {
-  metadata {
-    name      = "eks-admin"
-    namespace = "kube-system"
-  }
-}
-
-resource "kubernetes_cluster_role_binding" "eks_admin" {
-  metadata {
-    name = "eks-admin"
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = "cluster-admin"
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account.eks_admin.metadata[0].name
-    namespace = "kube-system"
-  }
-}
 
 ############################################################################################################
 ### NETWORKING
@@ -514,6 +490,34 @@ resource "aws_security_group_rule" "worker_node_egress_internet" {
 ### CLUSTER ROLE BASE ACCESS CONTROL
 ############################################################################################################
 # Define IAM Role for EKS Administrators
+
+
+
+resource "kubernetes_service_account" "eks_admin" {
+  metadata {
+    name      = "eks-admin"
+    namespace = "kube-system"
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "eks_admin" {
+  metadata {
+    name = "eks-admin"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.eks_admin.metadata[0].name
+    namespace = "kube-system"
+  }
+}
+
 resource "aws_iam_role" "eks_admins_role" {
   name = "${var.cluster_name}-eks-admins-role"
 
