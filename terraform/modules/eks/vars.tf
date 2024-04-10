@@ -47,6 +47,7 @@ variable "managed_node_groups" {
     desired_size   = number
     min_size       = number
     max_size       = number
+    max_unavailable = number
     instance_types = list(string)
   })
 }

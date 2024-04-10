@@ -166,6 +166,9 @@ resource "aws_eks_node_group" "main" {
     id      = aws_launch_template.eks_node_group.id
     version = "1"
   }
+  update_config {
+    max_unavailable = var.max_unavailable
+  }
 
   instance_types       = var.managed_node_groups.instance_types
   ami_type             = var.default_ami_type
@@ -816,7 +819,7 @@ resource "aws_lambda_function" "lambda_down" {
       CLUSTER_NAME    = var.cluster_name
       NODEGROUP_NAME  = var.managed_node_groups.name
       MIN_SIZE        = "0"
-      MAX_SIZE        = "1"
+      MAX_SIZE        = "0"
       DESIRED_SIZE    = "0"
     }
   }
