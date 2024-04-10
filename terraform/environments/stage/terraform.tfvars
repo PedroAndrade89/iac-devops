@@ -50,7 +50,7 @@ managed_node_groups = {
     desired_size   = 2
     min_size       = 0
     max_size       = 5
-    max_unavailable = 0
+    max_unavailable = 1
     instance_types = ["t3a.medium"]
 }
 
