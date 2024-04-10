@@ -786,7 +786,7 @@ resource "aws_cloudwatch_event_rule" "schedule_lambda_up" {
   count = var.environment != "prod" ? 1 : 0
   name  = "example_lambda_schedule_up"
   description = "Trigger Lambda to scale up on schedule"
-  schedule_expression = "cron(45 18 * * ? *)"
+  schedule_expression = "cron(50 18 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cloud_watch_target_up" {
