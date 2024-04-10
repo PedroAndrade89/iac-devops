@@ -765,8 +765,8 @@ resource "aws_lambda_function" "lambda_up" {
   role          = aws_iam_role.lambda_execution_role[count.index].arn
   handler       = "lambda_scale.lambda_handler"
   runtime       = "python3.8"
-  filename      = "${path.module}/lambda/lambda-scale.zip"
-  source_code_hash = filebase64sha256("${path.module}/lambda/lambda-scale.zip")
+  filename      = "${path.module}/lambda/lambda_scale.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda/lambda_scale.zip")
 
   environment {
     variables = {
@@ -783,7 +783,7 @@ resource "aws_cloudwatch_event_rule" "schedule_lambda_up" {
   count = var.environment != "prod" ? 1 : 0
   name  = "example_lambda_schedule_up"
   description = "Trigger Lambda to scale up on schedule"
-  schedule_expression = "cron(00 18 * * ? *)"
+  schedule_expression = "cron(05 18 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cloud_watch_target_up" {
@@ -808,8 +808,8 @@ resource "aws_lambda_function" "lambda_down" {
   role          = aws_iam_role.lambda_execution_role[count.index].arn
   handler       = "lambda_scale.lambda_handler"
   runtime       = "python3.8"
-  filename      = "${path.module}/lambda/lambda-scale.zip"
-  source_code_hash = filebase64sha256("${path.module}/lambda/lambda-scale.zip")
+  filename      = "${path.module}/lambda/lambda_scale.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda/lambda_scale.zip")
 
   environment {
     variables = {
@@ -826,7 +826,7 @@ resource "aws_cloudwatch_event_rule" "schedule_lambda_down" {
   count = var.environment != "prod" ? 1 : 0
   name  = "example_lambda_schedule_down"
   description = "Trigger Lambda to scale down on schedule"
-  schedule_expression = "cron(45 17 * * ? *)"
+  schedule_expression = "cron(56 17 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cloud_watch_target_down" {
