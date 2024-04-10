@@ -763,7 +763,7 @@ resource "aws_lambda_function" "lambda_up" {
   count = var.environment != "prod" ? 1 : 0
   function_name = "lambda_function_up"
   role          = aws_iam_role.lambda_execution_role[count.index].arn
-  handler       = "lambda_function.lambda_handler"
+  handler       = "lambda-scale.lambda_handler"
   runtime       = "python3.8"
   filename      = "${path.module}/lambda/lambda-scale.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda/lambda-scale.zip")
@@ -806,7 +806,7 @@ resource "aws_lambda_function" "lambda_down" {
   count = var.environment != "prod" ? 1 : 0
   function_name = "lambda_function_down"
   role          = aws_iam_role.lambda_execution_role[count.index].arn
-  handler       = "lambda_function.lambda_handler"
+  handler       = "lambda-scale.lambda_handler"
   runtime       = "python3.8"
   filename      = "${path.module}/lambda/lambda-scale.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda/lambda-scale.zip")
