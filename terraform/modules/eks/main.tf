@@ -328,6 +328,11 @@ resource "aws_iam_role_policy_attachment" "eks_asg_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AutoScalingFullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "eks_node_volume_policy" {
+  role       = aws_iam_role.node_role.name
+  policy_arn = "arn:aws:iam::154396925587:policy/eks-node-volume-policy"
+}
+
 # VPC CNI Plugin Role
 data "aws_iam_policy_document" "vpc_cni_assume_role_policy" {
   statement {
