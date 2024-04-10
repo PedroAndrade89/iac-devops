@@ -2,6 +2,7 @@
 
 nat_gateway= true
 vpc_name= "vpc-non-prod"
+environment = "stage"
 cidr_block="10.120.0.0/16"
 enable_dns_support= true
 enable_dns_hostnames= true
@@ -45,13 +46,11 @@ public_subnets = [
 cluster_name = "non-prod-eks"
 eks_version = "1.29"
 managed_node_groups = {
-  demo_group = {
     name           = "non-prod-eks-node-group"
     desired_size   = 2
     min_size       = 1
     max_size       = 5
     instance_types = ["t3a.medium"]
-  }
 }
 
 cluster_addons = ["vpc-cni", "kube-proxy", "coredns", "aws-ebs-csi-driver"]

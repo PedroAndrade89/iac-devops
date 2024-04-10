@@ -147,20 +147,19 @@ data "aws_ssm_parameter" "eks_ami_release_version" {
 
 
 resource "aws_eks_node_group" "main" {
-  for_each = var.managed_node_groups
 
   version         = aws_eks_cluster.main.version
   release_version = nonsensitive(data.aws_ssm_parameter.eks_ami_release_version.value)
 
   cluster_name    = aws_eks_cluster.main.name
-  node_group_name = each.value.name
+  node_group_name = var.managed_node_groups.name
   node_role_arn   = aws_iam_role.node_role.arn
   subnet_ids      = var.private_subnets
 
   scaling_config {
-    desired_size = each.value.desired_size
-    max_size     = each.value.max_size
-    min_size     = each.value.min_size
+    desired_size = var.managed_node_groups.desired_size
+    max_size     = var.managed_node_groups.max_size
+    min_size     = var.managed_node_groups.min_size
   }
 
   launch_template {
@@ -168,7 +167,7 @@ resource "aws_eks_node_group" "main" {
     version = "1"
   }
 
-  instance_types       = each.value.instance_types
+  instance_types       = var.managed_node_groups.instance_types
   ami_type             = var.default_ami_type
   capacity_type        = var.default_capacity_type
   force_update_version = true
@@ -725,4 +724,145 @@ resource "aws_eks_addon" "main" {
   depends_on = [
     aws_eks_node_group.main
   ]
+}
+
+############################################################################################################
+# Lambda scale nodes
+############################################################################################################
+
+resource "aws_iam_role" "lambda_execution_role" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  name = "lambda_execution_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid = ""
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "lambda_policy" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  name = "lambda_policy"
+  role = aws_iam_role.lambda_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "eks:UpdateNodegroupConfig",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+        Effect = "Allow"
+      },
+    ]
+  })
+}
+
+
+
+
+
+resource "aws_lambda_function" "lambda_up" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  function_name = "example_lambda_function"
+  role          = aws_iam_role.lambda_execution_role.arn
+
+  handler = "lambda_function.lambda_handler"
+  runtime = "python3.8"
+
+  filename         = "lambda/lambda-scale.zip"
+  source_code_hash = filebase64sha256("lambda/lambda-scale.zip")
+
+  nvironment {
+    variables = {
+      CLUSTER_NAME  = var.cluster_name
+      NODEGROUP_NAME = var.managed_node_groups.name
+      MIN_SIZE       = var.managed_node_groups.min_size
+      MAX_SIZE       = var.managed_node_groups.max_size
+      DESIRED_SIZE   = var.managed_node_groups.desired_size
+    }
+  }
+}
+
+
+resource "aws_cloudwatch_event_rule" "schedule_lambda_up" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  name                = "example_lambda_schedule"
+  description         = "Trigger Lambda on schedule"
+  schedule_expression = "cron(0 07 * * ? *)"  # Example: every day at 22:00 UTC
+}
+
+resource "aws_cloudwatch_event_target" "cloud_watch_lambda_up" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  rule      = aws_cloudwatch_event_rule.schedule_lambda_up.name
+  target_id = "exampleLambdaTarget"
+  arn       = aws_lambda_function.lambda_up.arn
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_up.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.schedule_lambda_up.arn
+}
+
+resource "aws_lambda_function" "lambda_down" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  function_name = "example_lambda_function"
+  role          = aws_iam_role.lambda_execution_role.arn
+
+  handler = "lambda_function.lambda_handler"
+  runtime = "python3.8"
+
+  filename         = "lambda/lambda-scale.zip"
+  source_code_hash = filebase64sha256("lambda/lambda-scale.zip")
+
+  environment {
+    variables = {
+      CLUSTER_NAME  = var.cluster_name
+      NODEGROUP_NAME = var.managed_node_groups.name
+      MIN_SIZE       = var.managed_node_groups.min_size
+      MAX_SIZE       = var.managed_node_groups.max_size
+      DESIRED_SIZE   = var.managed_node_groups.desired_size
+    }
+  }
+}
+
+
+resource "aws_cloudwatch_event_rule" "schedule_lambda_down" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  name                = "example_lambda_schedule"
+  description         = "Trigger Lambda on schedule"
+  schedule_expression = "cron(0 19 * * ? *)"  # Example: every day at 22:00 UTC
+}
+
+resource "aws_cloudwatch_event_target" "example_target" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  rule      = aws_cloudwatch_event_rule.schedule_lambda_down.name
+  target_id = "exampleLambdaTarget"
+  arn       = aws_lambda_function.lambda_down.arn
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call" {
+  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_down.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.schedule_lambda_down.arn
 }

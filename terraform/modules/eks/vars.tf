@@ -42,14 +42,20 @@ variable "eks_version" {
 
 variable "managed_node_groups" {
   description = "Map of maps specifying managed node groups"
-  type = map(object({
-    name : string
-    desired_size : number
-    min_size : number
-    max_size : number
-    instance_types : list(string)
-  }))
+  type = object({
+    name           = string
+    desired_size   = number
+    min_size       = number
+    max_size       = number
+    instance_types = list(string)
+  })
   default = {}
+}
+
+variable "environment" {
+  type        = string
+  nullable    = false
+  description = "environment type"
 }
 
 variable "eks_endpoint_public_access" {

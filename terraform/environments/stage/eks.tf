@@ -10,6 +10,7 @@ module "eks" {
   eks_endpoint_public_access = var.eks_endpoint_public_access
   eks_endpoint_private_access = var.eks_endpoint_private_access
   managed_node_groups = var.managed_node_groups
+  environment = var.environment
   eks_version = var.eks_version
   dev_access_namespaces = var.dev_access_namespaces
   jenkins_pipeline_access_namespaces = var.jenkins_pipeline_access_namespaces

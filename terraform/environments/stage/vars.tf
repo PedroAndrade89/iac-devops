@@ -16,6 +16,12 @@ variable "region" {
   description = "Aws region"
 }
 
+variable "environment" {
+  type        = string
+  nullable    = false
+  description = "environment type"
+}
+
 variable "cidr_block" {
   type        = string
   default     = "10.0.0.0/16"
@@ -72,13 +78,13 @@ variable "cluster_name" {
 
 variable "managed_node_groups" {
   description = "Map of maps specifying managed node groups"
-  type = map(object({
-    name : string
-    desired_size : number
-    min_size : number
-    max_size : number
-    instance_types : list(string)
-  }))
+  type = object({
+    name           = string
+    desired_size   = number
+    min_size       = number
+    max_size       = number
+    instance_types = list(string)
+  })
   default = {}
 }
 
