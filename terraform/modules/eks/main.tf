@@ -805,14 +805,14 @@ resource "aws_cloudwatch_event_rule" "schedule_lambda_up" {
   schedule_expression = "cron(0 07 * * ? *)"  # Example: every day at 22:00 UTC
 }
 
-resource "aws_cloudwatch_event_target" "cloud_watch_lambda_up" {
+resource "aws_cloudwatch_event_target" "cloud_watch_target_up" {
   count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
   rule      = aws_cloudwatch_event_rule.schedule_lambda_up.name
   target_id = "exampleLambdaTarget"
   arn       = aws_lambda_function.lambda_up.arn
 }
 
-resource "aws_lambda_permission" "allow_cloudwatch_to_call" {
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_up" {
   count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
@@ -851,14 +851,14 @@ resource "aws_cloudwatch_event_rule" "schedule_lambda_down" {
   schedule_expression = "cron(0 19 * * ? *)"  # Example: every day at 22:00 UTC
 }
 
-resource "aws_cloudwatch_event_target" "example_target" {
+resource "aws_cloudwatch_event_target" "cloud_watch_target_down" {
   count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
   rule      = aws_cloudwatch_event_rule.schedule_lambda_down.name
   target_id = "exampleLambdaTarget"
   arn       = aws_lambda_function.lambda_down.arn
 }
 
-resource "aws_lambda_permission" "allow_cloudwatch_to_call" {
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_down" {
   count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
