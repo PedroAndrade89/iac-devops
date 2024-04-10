@@ -729,140 +729,119 @@ resource "aws_eks_addon" "main" {
 ############################################################################################################
 # Lambda scale nodes
 ############################################################################################################
-
 resource "aws_iam_role" "lambda_execution_role" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  name = "lambda_execution_role"
+  count = var.environment != "prod" ? 1 : 0
+  name  = "lambda_execution_role"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Effect = "Allow"
-        Sid = ""
-      },
-    ]
+    Version   = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Effect    = "Allow"
+      Sid       = ""
+    }]
   })
 }
 
 resource "aws_iam_role_policy" "lambda_policy" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  name = "lambda_policy"
-  role = aws_iam_role.lambda_execution_role[count.index].id
+  count = var.environment != "prod" ? 1 : 0
+  name  = "lambda_policy"
+  role  = aws_iam_role.lambda_execution_role[count.index].id
 
   policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "eks:UpdateNodegroupConfig",
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "*"
-        Effect = "Allow"
-      },
-    ]
+    Version   = "2012-10-17"
+    Statement = [{
+      Action   = ["eks:UpdateNodegroupConfig", "logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+      Resource = "*"
+      Effect   = "Allow"
+    }]
   })
 }
 
-
-
-
-
 resource "aws_lambda_function" "lambda_up" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  function_name = "example_lambda_function"
+  count = var.environment != "prod" ? 1 : 0
+  function_name = "example_lambda_function_up"
   role          = aws_iam_role.lambda_execution_role[count.index].arn
-
-  handler = "lambda_function.lambda_handler"
-  runtime = "python3.8"
-
-  filename         = "${path.module}/lambda/lambda-scale.zip"
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.8"
+  filename      = "${path.module}/lambda/lambda-scale.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda/lambda-scale.zip")
 
   environment {
     variables = {
-      CLUSTER_NAME  = var.cluster_name
-      NODEGROUP_NAME = var.managed_node_groups.name
-      MIN_SIZE       = var.managed_node_groups.min_size
-      MAX_SIZE       = var.managed_node_groups.max_size
-      DESIRED_SIZE   = var.managed_node_groups.desired_size
+      CLUSTER_NAME    = var.cluster_name
+      NODEGROUP_NAME  = var.managed_node_groups.name
+      MIN_SIZE        = var.managed_node_groups.min_size
+      MAX_SIZE        = var.managed_node_groups.max_size
+      DESIRED_SIZE    = var.managed_node_groups.desired_size
     }
   }
 }
 
-
 resource "aws_cloudwatch_event_rule" "schedule_lambda_up" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  name                = "example_lambda_schedule"
-  description         = "Trigger Lambda on schedule"
-  schedule_expression = "cron(0 07 * * ? *)"  # Example: every day at 22:00 UTC
+  count = var.environment != "prod" ? 1 : 0
+  name  = "example_lambda_schedule_up"
+  description = "Trigger Lambda to scale up on schedule"
+  schedule_expression = "cron(0 07 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cloud_watch_target_up" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  rule      = aws_cloudwatch_event_rule.schedule_lambda_up.name
-  target_id = "exampleLambdaTarget"
-  arn       = aws_lambda_function.lambda_up.arn
+  count = var.environment != "prod" ? 1 : 0
+  rule      = aws_cloudwatch_event_rule.schedule_lambda_up[count.index].name
+  target_id = "exampleLambdaTargetUp"
+  arn       = aws_lambda_function.lambda_up[count.index].arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_up" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  statement_id  = "AllowExecutionFromCloudWatch"
+  count = var.environment != "prod" ? 1 : 0
+  statement_id  = "AllowExecutionFromCloudWatchUp"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_up.function_name
+  function_name = aws_lambda_function.lambda_up[count.index].function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.schedule_lambda_up.arn
+  source_arn    = aws_cloudwatch_event_rule.schedule_lambda_up[count.index].arn
 }
 
 resource "aws_lambda_function" "lambda_down" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  function_name = "example_lambda_function"
+  count = var.environment != "prod" ? 1 : 0
+  function_name = "example_lambda_function_down"
   role          = aws_iam_role.lambda_execution_role[count.index].arn
-
-  handler = "lambda_function.lambda_handler"
-  runtime = "python3.8"
-
-  filename         = "${path.module}/lambda/lambda-scale.zip"
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.8"
+  filename      = "${path.module}/lambda/lambda-scale.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda/lambda-scale.zip")
 
   environment {
     variables = {
-      CLUSTER_NAME  = var.cluster_name
-      NODEGROUP_NAME = var.managed_node_groups.name
-      MIN_SIZE       = var.managed_node_groups.min_size
-      MAX_SIZE       = var.managed_node_groups.max_size
-      DESIRED_SIZE   = var.managed_node_groups.desired_size
+      CLUSTER_NAME    = var.cluster_name
+      NODEGROUP_NAME  = var.managed_node_groups.name
+      MIN_SIZE        = var.managed_node_groups.min_size
+      MAX_SIZE        = var.managed_node_groups.max_size
+      DESIRED_SIZE    = var.managed_node_groups.desired_size
     }
   }
 }
 
-
 resource "aws_cloudwatch_event_rule" "schedule_lambda_down" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  name                = "example_lambda_schedule"
-  description         = "Trigger Lambda on schedule"
-  schedule_expression = "cron(0 19 * * ? *)"  # Example: every day at 22:00 UTC
+  count = var.environment != "prod" ? 1 : 0
+  name  = "example_lambda_schedule_down"
+  description = "Trigger Lambda to scale down on schedule"
+  schedule_expression = "cron(0 19 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cloud_watch_target_down" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  rule      = aws_cloudwatch_event_rule.schedule_lambda_down.name
-  target_id = "exampleLambdaTarget"
-  arn       = aws_lambda_function.lambda_down.arn
+  count = var.environment != "prod" ? 1 : 0
+  rule      = aws_cloudwatch_event_rule.schedule_lambda_down[count.index].name
+  target_id = "exampleLambdaTargetDown"
+  arn       = aws_lambda_function.lambda_down[count.index].arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_down" {
-  count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
-  statement_id  = "AllowExecutionFromCloudWatch"
+  count = var.environment != "prod" ? 1 : 0
+  statement_id  = "AllowExecutionFromCloudWatchDown"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_down.function_name
+  function_name = aws_lambda_function.lambda_down[count.index].function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.schedule_lambda_down.arn
+  source_arn    = aws_cloudwatch_event_rule.schedule_lambda_down[count.index].arn
 }
+
