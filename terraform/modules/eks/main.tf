@@ -819,7 +819,7 @@ resource "aws_lambda_function" "lambda_down" {
       CLUSTER_NAME    = var.cluster_name
       NODEGROUP_NAME  = var.managed_node_groups.name
       MIN_SIZE        = "0"
-      MAX_SIZE        = "0"
+      MAX_SIZE        = "1"
       DESIRED_SIZE    = "0"
     }
   }
