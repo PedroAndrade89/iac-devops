@@ -778,7 +778,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
 resource "aws_lambda_function" "lambda_up" {
   count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
   function_name = "example_lambda_function"
-  role          = aws_iam_role.lambda_execution_role.arn
+  role          = aws_iam_role.lambda_execution_role[count.index].arn
 
   handler = "lambda_function.lambda_handler"
   runtime = "python3.8"
@@ -824,7 +824,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_up" {
 resource "aws_lambda_function" "lambda_down" {
   count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
   function_name = "example_lambda_function"
-  role          = aws_iam_role.lambda_execution_role.arn
+  role          = aws_iam_role.lambda_execution_role[count.index].arn
 
   handler = "lambda_function.lambda_handler"
   runtime = "python3.8"
