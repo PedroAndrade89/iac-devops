@@ -752,7 +752,7 @@ resource "aws_iam_role" "lambda_execution_role" {
 resource "aws_iam_role_policy" "lambda_policy" {
   count = var.environment != "prod" ? 1 : 0  # Only create if environment is not prod
   name = "lambda_policy"
-  role = aws_iam_role.lambda_execution_role.id
+  role = aws_iam_role.lambda_execution_role[count.index].id
 
   policy = jsonencode({
     Version = "2012-10-17"
