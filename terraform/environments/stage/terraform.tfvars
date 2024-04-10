@@ -47,10 +47,10 @@ eks_version = "1.29"
 managed_node_groups = {
   demo_group = {
     name           = "non-prod-eks-node-group"
-    desired_size   = 3
+    desired_size   = 2
     min_size       = 1
     max_size       = 5
-    instance_types = ["t3a.small"]
+    instance_types = ["t3a.medium"]
   }
 }
 
