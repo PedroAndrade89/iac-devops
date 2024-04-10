@@ -783,8 +783,8 @@ resource "aws_lambda_function" "lambda_up" {
   handler = "lambda_function.lambda_handler"
   runtime = "python3.8"
 
-  filename         = "lambda/lambda-scale.zip"
-  source_code_hash = filebase64sha256("lambda/lambda-scale.zip")
+  filename         = "./lambda/lambda-scale.zip"
+  source_code_hash = filebase64sha256("./lambda/lambda-scale.zip")
 
   nvironment {
     variables = {
@@ -829,8 +829,8 @@ resource "aws_lambda_function" "lambda_down" {
   handler = "lambda_function.lambda_handler"
   runtime = "python3.8"
 
-  filename         = "lambda/lambda-scale.zip"
-  source_code_hash = filebase64sha256("lambda/lambda-scale.zip")
+  filename         = "./lambda/lambda-scale.zip"
+  source_code_hash = filebase64sha256("./lambda/lambda-scale.zip")
 
   environment {
     variables = {
