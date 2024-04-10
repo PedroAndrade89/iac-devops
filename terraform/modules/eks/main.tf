@@ -783,7 +783,7 @@ resource "aws_cloudwatch_event_rule" "schedule_lambda_up" {
   count = var.environment != "prod" ? 1 : 0
   name  = "example_lambda_schedule_up"
   description = "Trigger Lambda to scale up on schedule"
-  schedule_expression = "cron(0 07 * * ? *)"
+  schedule_expression = "cron(00 18 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cloud_watch_target_up" {
@@ -826,7 +826,7 @@ resource "aws_cloudwatch_event_rule" "schedule_lambda_down" {
   count = var.environment != "prod" ? 1 : 0
   name  = "example_lambda_schedule_down"
   description = "Trigger Lambda to scale down on schedule"
-  schedule_expression = "cron(0 19 * * ? *)"
+  schedule_expression = "cron(45 17 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "cloud_watch_target_down" {
